@@ -65,25 +65,13 @@ export default function YearlyPage() {
     return `Yearly Summary - ${data.year || '2025'}`;
   };
 
-  const getDateRange = () => {
-    if (selectedMonth && data.monthStart && data.monthEnd) {
-      return `${new Date(data.monthStart).toLocaleDateString()} - ${new Date(data.monthEnd).toLocaleDateString()}`;
-    } else if (data.yearStart && data.yearEnd) {
-      return `${new Date(data.yearStart).toLocaleDateString()} - ${new Date(data.yearEnd).toLocaleDateString()}`;
-    }
-    return '';
-  };
+  // Removed date range display as requested
   return (
     <div className="space-y-6">
       {/* Summary Section */}
       <div className="rounded-xl border p-6">
         <h2 className="font-semibold mb-2 text-gradient-rainbow">{getDisplayTitle()}</h2>
         <p className="text-gradient-blue">Total: <span className="text-gradient-sunset">{data.totalHours} hours</span></p>
-        {getDateRange() && (
-          <p className="text-sm text-gradient-purple">
-            Range: {getDateRange()}
-          </p>
-        )}
       </div>
 
       {/* Month Pagination */}

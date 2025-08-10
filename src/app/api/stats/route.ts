@@ -70,10 +70,17 @@ export async function GET(req: NextRequest) {
     const monthParam = url.searchParams.get('filterMonth');
     
     if (monthParam) {
-      // Filter for specific month (1-12)
+      // Filter for specific month (1-12) with Bangladesh timezone consideration
       const filterMonth = parseInt(monthParam) - 1; // Convert to 0-based month
-      const monthStart = new Date(Date.UTC(year, filterMonth, 1, 0, 0, 0));
-      const monthEnd = new Date(Date.UTC(year, filterMonth + 1, 0, 23, 59, 59)); // Last day of month
+      
+      // For Bangladesh timezone (UTC+6), extend the range to catch timezone boundary outages
+      let monthStart = new Date(Date.UTC(year, filterMonth, 1, 0, 0, 0));
+      let monthEnd = new Date(Date.UTC(year, filterMonth + 1, 0, 23, 59, 59)); // Last day of month
+      
+      // For January, include December 31st of previous year to catch Bangladesh timezone outages
+      if (filterMonth === 0) { // January
+        monthStart = new Date(Date.UTC(year - 1, 11, 31, 18, 0, 0)); // Dec 31, 18:00 UTC = Jan 1, 00:00 Bangladesh
+      }
       
       const outages = await db.collection('outages').find({
         start: {
