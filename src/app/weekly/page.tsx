@@ -71,7 +71,7 @@ export default async function WeeklyPage() {
             const dayOutages = data.dailyBreakdown?.[index] || { hours: 0, count: 0 };
             return (
               <div key={day} className="text-center p-2 bg-gray-50 rounded">
-                <div className="font-medium">{day}</div>
+                <div className="font-medium text-gradient-primary">{day}</div>
                 <div className="text-gradient-blue">{dayOutages.hours}h</div>
                 <div className="text-gradient-purple">{dayOutages.count} outages</div>
               </div>
