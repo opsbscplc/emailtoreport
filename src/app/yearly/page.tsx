@@ -19,27 +19,27 @@ export default async function YearlyPage() {
   return (
     <div className="space-y-6">
       <div className="rounded-xl border p-6">
-        <h2 className="font-semibold mb-2">Yearly Summary</h2>
-        <p>Total: {data.totalHours} hours</p>
+        <h2 className="font-semibold mb-2 text-gradient-rainbow">Yearly Summary</h2>
+        <p className="text-gradient-blue">Total: <span className="text-gradient-sunset">{data.totalHours} hours</span></p>
       </div>
       <div className="rounded-xl border p-6">
-        <h3 className="font-semibold mb-2">Breakdown</h3>
+        <h3 className="font-semibold mb-2 text-gradient-primary">Breakdown</h3>
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left">
-              <th className="py-2">Date</th>
-              <th>Down Time</th>
-              <th>Up Time</th>
-              <th>Duration (min)</th>
+              <th className="py-2 text-gradient-blue">Date</th>
+              <th className="text-gradient-red">Down Time</th>
+              <th className="text-gradient-green">Up Time</th>
+              <th className="text-gradient-purple">Duration (min)</th>
             </tr>
           </thead>
           <tbody>
             {data.outages.map((o: any) => (
               <tr key={o.start} className="border-t">
-                <td className="py-2">{format(new Date(o.start), 'PP')}</td>
-                <td>{format(new Date(o.start), 'pp')}</td>
-                <td>{o.end ? format(new Date(o.end), 'pp') : '-'}</td>
-                <td>{o.durationMinutes ?? '-'}</td>
+                <td className="py-2 text-gradient-blue">{format(new Date(o.start), 'PP')}</td>
+                <td className="text-gradient-red">{format(new Date(o.start), 'pp')}</td>
+                <td className="text-gradient-green">{o.end ? format(new Date(o.end), 'pp') : '-'}</td>
+                <td className="text-gradient-purple">{o.durationMinutes ?? '-'}</td>
               </tr>
             ))}
           </tbody>

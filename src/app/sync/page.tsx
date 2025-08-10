@@ -178,7 +178,7 @@ export default function SyncPage() {
                       setSyncResult(null);
                       setProgress(0);
                     }}
-                    className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-3 px-4 rounded-xl transition-all duration-200 border border-gray-300"
+                    className="flex-1 bg-gray-200 hover:bg-gray-300 text-gradient-blue font-semibold py-3 px-4 rounded-xl transition-all duration-200 border border-gray-300"
                   >
                     Sync Again
                   </button>
@@ -208,7 +208,7 @@ export default function SyncPage() {
                   </button>
                   <button
                     onClick={() => router.push('/')}
-                    className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-3 px-4 rounded-xl transition-all duration-200 border border-gray-300"
+                    className="flex-1 bg-gray-200 hover:bg-gray-300 text-gradient-blue font-semibold py-3 px-4 rounded-xl transition-all duration-200 border border-gray-300"
                   >
                     Go Back
                   </button>

@@ -72,8 +72,8 @@ export default async function WeeklyPage() {
             return (
               <div key={day} className="text-center p-2 bg-gray-50 rounded">
                 <div className="font-medium">{day}</div>
-                <div className="text-gray-600">{dayOutages.hours}h</div>
-                <div className="text-gray-500">{dayOutages.count} outages</div>
+                <div className="text-gradient-blue">{dayOutages.hours}h</div>
+                <div className="text-gradient-purple">{dayOutages.count} outages</div>
               </div>
             );
           })}

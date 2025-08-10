@@ -166,48 +166,48 @@ export default function Home() {
         <div className="space-y-4">
           <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-600">Total Duration</span>
+              <span className="text-sm text-gradient-purple">Total Duration</span>
               <span className="text-2xl">⏱️</span>
             </div>
-            <p className="text-2xl font-bold text-gray-900">{stats?.totalHours || 0}h</p>
-            <p className="text-sm text-gray-500">{stats?.totalMinutes || 0} minutes</p>
+            <p className="text-2xl font-bold text-gradient-rainbow">{stats?.totalHours || 0}h</p>
+            <p className="text-sm text-gradient-blue">{stats?.totalMinutes || 0} minutes</p>
           </div>
 
           <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-600">Outages Today</span>
+              <span className="text-sm text-gradient-orange">Outages Today</span>
               <span className="text-2xl">📊</span>
             </div>
-            <p className="text-2xl font-bold text-gray-900">{stats?.outages?.length || 0}</p>
-            <p className="text-sm text-gray-500">incidents</p>
+            <p className="text-2xl font-bold text-gradient-sunset">{stats?.outages?.length || 0}</p>
+            <p className="text-sm text-gradient-green">incidents</p>
           </div>
         </div>
       </div>
 
       {/* How it Works */}
       <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">💡 How it works</h3>
+        <h3 className="text-lg font-bold text-gradient-primary mb-4">💡 How it works</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="text-center">
             <div className="w-12 h-12 bg-gradient-to-r from-blue-400 to-blue-600 rounded-xl flex items-center justify-center mx-auto mb-3">
               <span className="text-xl">📧</span>
             </div>
-            <h4 className="font-semibold text-gray-900 mb-1">Email Reading</h4>
-            <p className="text-sm text-gray-600">We monitor your "PDB Notifications" Gmail label</p>
+            <h4 className="font-semibold text-gradient-blue mb-1">Email Reading</h4>
+            <p className="text-sm text-gradient-purple">We monitor your "PDB Notifications" Gmail label</p>
           </div>
           <div className="text-center">
             <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-3">
               <span className="text-xl">⚡</span>
             </div>
-            <h4 className="font-semibold text-gray-900 mb-1">Smart Parsing</h4>
-            <p className="text-sm text-gray-600">Parse "PDB Down" and "PDB Up" subjects automatically</p>
+            <h4 className="font-semibold text-gradient-purple mb-1">Smart Parsing</h4>
+            <p className="text-sm text-gradient-orange">Parse "PDB Down" and "PDB Up" subjects automatically</p>
           </div>
           <div className="text-center">
             <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-green-600 rounded-xl flex items-center justify-center mx-auto mb-3">
               <span className="text-xl">📈</span>
             </div>
-            <h4 className="font-semibold text-gray-900 mb-1">Duration Tracking</h4>
-            <p className="text-sm text-gray-600">Calculate precise load shedding duration and trends</p>
+            <h4 className="font-semibold text-gradient-green mb-1">Duration Tracking</h4>
+            <p className="text-sm text-gradient-blue">Calculate precise load shedding duration and trends</p>
           </div>
         </div>
       </div>
