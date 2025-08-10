@@ -66,7 +66,36 @@ export async function GET(req: NextRequest) {
   }
 
   if (scope === 'yearly') {
-    // Create date range for the entire year (January 1st to December 31st)
+    // Check if a specific month is requested for pagination
+    const monthParam = url.searchParams.get('filterMonth');
+    
+    if (monthParam) {
+      // Filter for specific month (1-12)
+      const filterMonth = parseInt(monthParam) - 1; // Convert to 0-based month
+      const monthStart = new Date(Date.UTC(year, filterMonth, 1, 0, 0, 0));
+      const monthEnd = new Date(Date.UTC(year, filterMonth + 1, 0, 23, 59, 59)); // Last day of month
+      
+      const outages = await db.collection('outages').find({
+        start: {
+          $gte: monthStart,
+          $lte: monthEnd
+        }
+      }).sort({ start: 1 }).toArray();
+      
+      const totalMinutes = outages.reduce((acc, o) => acc + (o.durationMinutes || 0), 0);
+      return NextResponse.json({ 
+        scope, 
+        year,
+        filterMonth: parseInt(monthParam),
+        monthStart: monthStart.toISOString(),
+        monthEnd: monthEnd.toISOString(),
+        totalMinutes, 
+        totalHours: toHours(totalMinutes), 
+        outages 
+      });
+    }
+    
+    // Default: Create date range for the entire year (January 1st to December 31st)
     const yearStart = new Date(Date.UTC(year, 0, 1, 0, 0, 0)); // January 1st UTC
     const yearEnd = new Date(Date.UTC(year, 11, 31, 23, 59, 59)); // December 31st UTC
     
