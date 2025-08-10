@@ -122,9 +122,14 @@ async function main() {
   await mongo.close();
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exitCode = 1;
-});
+main()
+  .then(() => {
+    // Ensure the process exits to avoid hanging runners
+    process.exit(0);
+  })
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
 
 
