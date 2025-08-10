@@ -186,19 +186,19 @@ export default function MonthlyPage() {
   return (
     <div className="space-y-6">
       <div className="rounded-xl border p-6 bg-gradient-to-r from-blue-50 to-indigo-50">
-        <h2 className="font-semibold mb-2 text-xl text-gray-800">Monthly Summary</h2>
+        <h2 className="font-semibold mb-2 text-xl text-gradient-sunset">Monthly Summary</h2>
         <div className="flex items-center gap-6">
           <div>
-            <p className="text-2xl font-bold text-blue-600">{data.totalHours} hours</p>
-            <p className="text-sm text-gray-600">Total Load Shedding</p>
+            <p className="text-2xl font-bold text-gradient-blue">{data.totalHours} hours</p>
+            <p className="text-sm text-gradient-purple">Total Load Shedding</p>
           </div>
           <div>
-            <p className="text-lg font-semibold text-indigo-600">{data.outages.length}</p>
-            <p className="text-sm text-gray-600">Total Outages</p>
+            <p className="text-lg font-semibold text-gradient-green">{data.outages.length}</p>
+            <p className="text-sm text-gradient-blue">Total Outages</p>
           </div>
           <div>
-            <p className="text-lg font-semibold text-purple-600">{Math.round(data.totalMinutes / data.outages.length || 0)} min</p>
-            <p className="text-sm text-gray-600">Avg Duration</p>
+            <p className="text-lg font-semibold text-gradient-orange">{Math.round(data.totalMinutes / data.outages.length || 0)} min</p>
+            <p className="text-sm text-gradient-red">Avg Duration</p>
           </div>
         </div>
       </div>
@@ -208,32 +208,32 @@ export default function MonthlyPage() {
         <div className="h-96 mb-4">
           <Bar data={chartData} options={chartOptions} />
         </div>
-        <div className="flex items-center justify-between text-sm text-gray-600 mt-4">
-          <p>💡 Hover over bars to see detailed information</p>
-          <p>🎨 Each day has a unique color for easy identification</p>
+        <div className="flex items-center justify-between text-sm mt-4">
+          <p className="text-gradient-blue">💡 Hover over bars to see detailed information</p>
+          <p className="text-gradient-purple">🎨 Each day has a unique color for easy identification</p>
         </div>
       </div>
 
       <div className="rounded-xl border p-6">
-        <h3 className="font-semibold mb-4 text-lg text-gray-800">Detailed Breakdown</h3>
+        <h3 className="font-semibold mb-4 text-lg text-gradient-primary">Detailed Breakdown</h3>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left border-b-2 border-gray-200">
-                <th className="py-3 px-2 font-semibold text-gray-700">Date</th>
-                <th className="py-3 px-2 font-semibold text-gray-700">Down Time</th>
-                <th className="py-3 px-2 font-semibold text-gray-700">Up Time</th>
-                <th className="py-3 px-2 font-semibold text-gray-700">Duration</th>
+                <th className="py-3 px-2 font-semibold text-gradient-blue">Date</th>
+                <th className="py-3 px-2 font-semibold text-gradient-red">Down Time</th>
+                <th className="py-3 px-2 font-semibold text-gradient-green">Up Time</th>
+                <th className="py-3 px-2 font-semibold text-gradient-purple">Duration</th>
               </tr>
             </thead>
             <tbody>
               {data.outages.map((o: any, index: number) => (
                 <tr key={o.start} className={`border-t hover:bg-gray-50 ${index % 2 === 0 ? 'bg-gray-25' : ''}`}>
-                  <td className="py-3 px-2 font-medium">{format(new Date(o.start), 'MMM dd, yyyy')}</td>
-                  <td className="py-3 px-2 text-red-600">{format(new Date(o.start), 'HH:mm')}</td>
-                  <td className="py-3 px-2 text-green-600">{o.end ? format(new Date(o.end), 'HH:mm') : 'Ongoing'}</td>
+                  <td className="py-3 px-2 font-medium text-gradient-blue">{format(new Date(o.start), 'MMM dd, yyyy')}</td>
+                  <td className="py-3 px-2 text-gradient-red">{format(new Date(o.start), 'HH:mm')}</td>
+                  <td className="py-3 px-2 text-gradient-green">{o.end ? format(new Date(o.end), 'HH:mm') : 'Ongoing'}</td>
                   <td className="py-3 px-2">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-gradient-purple">
                       {o.durationMinutes ? `${Math.floor(o.durationMinutes / 60)}h ${o.durationMinutes % 60}m` : '-'}
                     </span>
                   </td>
@@ -241,7 +241,7 @@ export default function MonthlyPage() {
               ))}
               {data.outages.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="py-8 text-center text-gray-500">
+                  <td colSpan={4} className="py-8 text-center text-gradient-green">
                     🎉 No outages recorded this month!
                   </td>
                 </tr>

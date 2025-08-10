@@ -36,8 +36,8 @@ export default function Home() {
               <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <span className="text-2xl">⚡</span>
               </div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-4">Load Shedding Tracker</h1>
-              <p className="text-gray-600 mb-8">
+              <h1 className="text-2xl font-bold text-gradient-sunset mb-4">Load Shedding Tracker</h1>
+              <p className="text-gradient-blue mb-8">
                 Track PDB load shedding duration from Gmail notifications with beautiful reports and analytics.
               </p>
               <a 
@@ -60,8 +60,8 @@ export default function Home() {
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-8 rounded-2xl mb-8 shadow-xl">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold mb-2">
-              Welcome back, {session.user?.email?.split('@')[0]}! 👋
+            <h1 className="text-3xl font-bold mb-2 text-white">
+              Welcome back, <span className="text-gradient-rainbow">{session.user?.email?.split('@')[0]}</span>! 👋
             </h1>
             <p className="text-blue-100">Monitor load shedding patterns and duration with real-time insights</p>
           </div>
@@ -90,8 +90,8 @@ export default function Home() {
               </button>
             </form>
           </div>
-          <h3 className="font-semibold text-gray-900 mb-1">Gmail Sync</h3>
-          <p className="text-sm text-gray-600">Update load shedding data</p>
+                          <h3 className="font-semibold text-gradient-green mb-1">Gmail Sync</h3>
+                <p className="text-sm text-gradient-blue">Update load shedding data</p>
         </div>
 
         <Link href="/daily" className="block">
@@ -99,8 +99,8 @@ export default function Home() {
             <div className="w-12 h-12 bg-gradient-to-r from-blue-400 to-blue-600 rounded-xl flex items-center justify-center mb-4">
               <span className="text-xl">📅</span>
             </div>
-            <h3 className="font-semibold text-gray-900 mb-1">Daily Report</h3>
-            <p className="text-sm text-gray-600">Today's outages</p>
+            <h3 className="font-semibold text-gradient-blue mb-1">Daily Report</h3>
+            <p className="text-sm text-gradient-purple">Today's outages</p>
           </div>
         </Link>
 
@@ -109,8 +109,8 @@ export default function Home() {
             <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-purple-600 rounded-xl flex items-center justify-center mb-4">
               <span className="text-xl">📊</span>
             </div>
-            <h3 className="font-semibold text-gray-900 mb-1">Weekly Report ⭐</h3>
-            <p className="text-sm text-gray-600">7-day breakdown</p>
+            <h3 className="font-semibold text-gradient-purple mb-1">Weekly Report ⭐</h3>
+            <p className="text-sm text-gradient-blue">7-day breakdown</p>
           </div>
         </Link>
 
@@ -119,8 +119,8 @@ export default function Home() {
             <div className="w-12 h-12 bg-gradient-to-r from-orange-400 to-orange-600 rounded-xl flex items-center justify-center mb-4">
               <span className="text-xl">📈</span>
             </div>
-            <h3 className="font-semibold text-gray-900 mb-1">Monthly Report</h3>
-            <p className="text-sm text-gray-600">Current month</p>
+            <h3 className="font-semibold text-gradient-orange mb-1">Monthly Report</h3>
+            <p className="text-sm text-gradient-red">Current month</p>
           </div>
         </Link>
       </div>
@@ -129,17 +129,17 @@ export default function Home() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         {/* Today's Summary */}
         <div className="lg:col-span-2 bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20">
-          <h3 className="text-xl font-bold text-gray-900 mb-4">Today's Load Shedding</h3>
+          <h3 className="text-xl font-bold text-gradient-sunset mb-4">Today's Load Shedding</h3>
           {stats?.outages?.length > 0 ? (
             <div className="space-y-3">
               {stats.outages.slice(0, 3).map((outage: any, index: number) => (
                 <div key={index} className="flex items-center justify-between p-4 bg-gradient-to-r from-red-50 to-orange-50 rounded-xl border border-red-100">
                   <div>
-                    <p className="font-medium text-gray-900">
+                    <p className="font-medium text-gradient-red">
                       {new Date(outage.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       {outage.end && ` - ${new Date(outage.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
                     </p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gradient-orange">
                       {outage.durationMinutes ? `${Math.floor(outage.durationMinutes / 60)}h ${outage.durationMinutes % 60}m` : 'Ongoing'}
                     </p>
                   </div>
@@ -147,7 +147,7 @@ export default function Home() {
                 </div>
               ))}
               {stats.outages.length > 3 && (
-                <Link href="/daily" className="block text-center text-blue-600 hover:text-blue-700 font-medium">
+                <Link href="/daily" className="block text-center text-gradient-blue hover:text-gradient-purple font-medium">
                   View all {stats.outages.length} outages →
                 </Link>
               )}
@@ -157,7 +157,7 @@ export default function Home() {
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">✅</span>
               </div>
-              <p className="text-gray-600">No load shedding today!</p>
+              <p className="text-gradient-green">No load shedding today!</p>
             </div>
           )}
         </div>

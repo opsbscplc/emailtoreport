@@ -23,18 +23,18 @@ export default async function WeeklyPage() {
   return (
     <div className="space-y-6">
       <div className="rounded-xl border p-6">
-        <h2 className="font-semibold mb-2">Weekly Summary</h2>
-        <p className="text-sm text-gray-600 mb-2">
+        <h2 className="font-semibold mb-2 text-gradient-sunset">Weekly Summary</h2>
+        <p className="text-sm text-gradient-blue mb-2">
           Week of {format(weekStart, 'PP')} - {format(weekEnd, 'PP')}
         </p>
-        <p>Total Load Shedding: <span className="font-semibold">{data.totalHours} hours</span></p>
-        <p className="text-sm text-gray-600">({data.totalMinutes} minutes total)</p>
+        <p className="text-gradient-purple">Total Load Shedding: <span className="font-semibold text-gradient-rainbow">{data.totalHours} hours</span></p>
+        <p className="text-sm text-gradient-orange">({data.totalMinutes} minutes total)</p>
       </div>
       
       <div className="rounded-xl border p-6">
-        <h3 className="font-semibold mb-2">This Week's Outages</h3>
+        <h3 className="font-semibold mb-2 text-gradient-primary">This Week's Outages</h3>
         {data.outages.length === 0 ? (
-          <p className="text-gray-500 text-sm">No outages recorded this week.</p>
+          <p className="text-gradient-green text-sm">No outages recorded this week.</p>
         ) : (
           <table className="w-full text-sm">
             <thead>
@@ -65,7 +65,7 @@ export default async function WeeklyPage() {
       </div>
 
       <div className="rounded-xl border p-6">
-        <h3 className="font-semibold mb-2">Daily Breakdown</h3>
+        <h3 className="font-semibold mb-2 text-gradient-rainbow">Daily Breakdown</h3>
         <div className="grid grid-cols-7 gap-2 text-xs">
           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => {
             const dayOutages = data.dailyBreakdown?.[index] || { hours: 0, count: 0 };

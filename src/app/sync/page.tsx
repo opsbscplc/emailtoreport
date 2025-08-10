@@ -80,8 +80,8 @@ export default function SyncPage() {
               <div className="w-20 h-20 bg-gradient-to-r from-blue-400 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
                 <span className="text-3xl">🔄</span>
               </div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Gmail Sync</h1>
-              <p className="text-gray-600">
+              <h1 className="text-3xl font-bold text-gradient-sunset mb-2">Gmail Sync</h1>
+              <p className="text-gradient-blue">
                 Synchronize PDB notifications from your Gmail to track load shedding duration
               </p>
             </div>
@@ -91,21 +91,21 @@ export default function SyncPage() {
               <div className="space-y-6">
                 <div className="bg-gray-50 rounded-2xl p-6 border border-gray-200">
                   <div className="text-left space-y-3">
-                    <div className="flex items-center text-gray-700">
+                    <div className="flex items-center">
                       <span className="w-2 h-2 bg-blue-400 rounded-full mr-3"></span>
-                      <span className="text-sm">Connect to Gmail API</span>
+                      <span className="text-sm text-gradient-blue">Connect to Gmail API</span>
                     </div>
-                    <div className="flex items-center text-gray-700">
+                    <div className="flex items-center">
                       <span className="w-2 h-2 bg-purple-400 rounded-full mr-3"></span>
-                      <span className="text-sm">Read "PDB Notifications" label</span>
+                      <span className="text-sm text-gradient-purple">Read "PDB Notifications" label</span>
                     </div>
-                    <div className="flex items-center text-gray-700">
+                    <div className="flex items-center">
                       <span className="w-2 h-2 bg-pink-400 rounded-full mr-3"></span>
-                      <span className="text-sm">Parse outage events</span>
+                      <span className="text-sm text-gradient-red">Parse outage events</span>
                     </div>
-                    <div className="flex items-center text-gray-700">
+                    <div className="flex items-center">
                       <span className="w-2 h-2 bg-green-400 rounded-full mr-3"></span>
-                      <span className="text-sm">Calculate durations</span>
+                      <span className="text-sm text-gradient-green">Calculate durations</span>
                     </div>
                   </div>
                 </div>
@@ -132,14 +132,14 @@ export default function SyncPage() {
                   </div>
                   
                   <div className="bg-gray-50 rounded-2xl p-6 border border-gray-200">
-                    <h3 className="text-gray-900 font-semibold mb-4">Synchronizing...</h3>
+                    <h3 className="text-gradient-primary font-semibold mb-4">Synchronizing...</h3>
                     <div className="w-full bg-gray-200 rounded-full h-3 mb-4">
                       <div 
                         className="bg-gradient-to-r from-blue-500 to-purple-600 h-3 rounded-full transition-all duration-500 ease-out"
                         style={{ width: `${progress}%` }}
                       ></div>
                     </div>
-                    <p className="text-gray-600 text-sm">{Math.round(progress)}% complete</p>
+                    <p className="text-gradient-blue text-sm">{Math.round(progress)}% complete</p>
                   </div>
                 </div>
               </div>
@@ -152,15 +152,15 @@ export default function SyncPage() {
                 </div>
                 
                 <div className="bg-green-50 rounded-2xl p-6 border border-green-200">
-                  <h3 className="text-gray-900 font-semibold mb-4">Sync Complete!</h3>
+                  <h3 className="text-gradient-green font-semibold mb-4">Sync Complete!</h3>
                   <div className="grid grid-cols-2 gap-4 text-center">
                     <div>
-                      <p className="text-2xl font-bold text-green-600">{syncResult?.inserted || 0}</p>
-                      <p className="text-gray-600 text-sm">Messages Processed</p>
+                      <p className="text-2xl font-bold text-gradient-rainbow">{syncResult?.inserted || 0}</p>
+                      <p className="text-gradient-blue text-sm">Messages Processed</p>
                     </div>
                     <div>
-                      <p className="text-2xl font-bold text-green-600">{syncResult?.outages || 0}</p>
-                      <p className="text-gray-600 text-sm">Outages Calculated</p>
+                      <p className="text-2xl font-bold text-gradient-rainbow">{syncResult?.outages || 0}</p>
+                      <p className="text-gradient-purple text-sm">Outages Calculated</p>
                     </div>
                   </div>
                 </div>
@@ -193,8 +193,8 @@ export default function SyncPage() {
                 </div>
                 
                 <div className="bg-red-50 rounded-2xl p-6 border border-red-200">
-                  <h3 className="text-gray-900 font-semibold mb-2">Sync Failed</h3>
-                  <p className="text-red-600 text-sm">
+                  <h3 className="text-gradient-red font-semibold mb-2">Sync Failed</h3>
+                  <p className="text-gradient-orange text-sm">
                     Unable to synchronize with Gmail. Please check your connection and try again.
                   </p>
                 </div>
@@ -218,7 +218,7 @@ export default function SyncPage() {
 
             {/* Footer */}
             <div className="mt-8 pt-6 border-t border-gray-200">
-              <p className="text-gray-500 text-xs">
+              <p className="text-gradient-blue text-xs">
                 Logged in as {session.user?.email}
               </p>
             </div>
