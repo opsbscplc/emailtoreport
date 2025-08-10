@@ -40,13 +40,31 @@ async function main() {
     throw new Error(`Label not found: ${GMAIL_LABEL_NAME}`);
   }
 
-  // List recent messages (tune as needed)
-  const listRes = await gmail.users.messages.list({ userId: GMAIL_USER, labelIds: [label.id], maxResults: 500 });
-  const messages = listRes.data.messages || [];
-  console.log(`Found ${messages.length} messages in label`);
+  // List ALL messages from January 1, 2025 onwards with pagination
+  const allMessages = [];
+  let pageToken = undefined;
+  const startDate = '2025/01/01'; // Gmail search format: YYYY/MM/DD
+  
+  do {
+    const listRes = await gmail.users.messages.list({ 
+      userId: GMAIL_USER, 
+      labelIds: [label.id], 
+      maxResults: 500,
+      pageToken,
+      q: `after:${startDate}` // Only get messages from January 1, 2025 onwards
+    });
+    
+    const messages = listRes.data.messages || [];
+    allMessages.push(...messages);
+    pageToken = listRes.data.nextPageToken;
+    
+    console.log(`Fetched ${messages.length} messages (total: ${allMessages.length})`);
+  } while (pageToken);
+  
+  console.log(`Found ${allMessages.length} total messages in label from ${startDate} onwards`);
 
   let insertedOrSeen = 0;
-  for (const m of messages) {
+  for (const m of allMessages) {
     const msg = await gmail.users.messages.get({ userId: GMAIL_USER, id: m.id, format: 'metadata', metadataHeaders: ['Subject', 'Date', 'Message-Id'] });
     const headers = msg.data.payload?.headers || [];
     const header = (name) => headers.find((h) => (h.name || '').toLowerCase() === name.toLowerCase())?.value;
