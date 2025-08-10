@@ -39,19 +39,19 @@ export default async function WeeklyPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left border-b">
-                <th className="py-2">Date</th>
-                <th>Down Time</th>
-                <th>Up Time</th>
-                <th>Duration</th>
+                <th className="py-2 text-gradient-blue">Date</th>
+                <th className="text-gradient-red">Down Time</th>
+                <th className="text-gradient-green">Up Time</th>
+                <th className="text-gradient-purple">Duration</th>
               </tr>
             </thead>
             <tbody>
               {data.outages.map((o: any) => (
                 <tr key={o.start} className="border-t">
-                  <td className="py-2">{format(new Date(o.start), 'EEE, MMM dd')}</td>
-                  <td>{format(new Date(o.start), 'HH:mm')}</td>
-                  <td>{o.end ? format(new Date(o.end), 'HH:mm') : 'Ongoing'}</td>
-                  <td>
+                  <td className="py-2 text-gradient-blue">{format(new Date(o.start), 'EEE, MMM dd')}</td>
+                  <td className="text-gradient-red">{format(new Date(o.start), 'HH:mm')}</td>
+                  <td className="text-gradient-green">{o.end ? format(new Date(o.end), 'HH:mm') : 'Ongoing'}</td>
+                  <td className="text-gradient-purple">
                     {o.durationMinutes 
                       ? `${Math.floor(o.durationMinutes / 60)}h ${o.durationMinutes % 60}m`
                       : '-'
