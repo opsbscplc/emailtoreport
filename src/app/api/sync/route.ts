@@ -20,8 +20,8 @@ export async function POST(req: NextRequest) {
   const label = process.env.GMAIL_LABEL_NAME || 'PDB Notifications';
   const db = await getDb();
 
-  // Fetch ALL messages from January 1, 2025 onwards for complete historical data
-  const messages = await listLabelMessages(gmail, user, label, 200, '2025/01/01');
+  // Fetch ALL messages from December 31, 2024 onwards to catch Bangladesh timezone outages  
+  const messages = await listLabelMessages(gmail, user, label, 200, '2024/12/31');
 
   // Store raw email events (dedup on messageId)
   const rawEvents: { type: 'down' | 'up'; at: Date; messageId: string }[] = [];
