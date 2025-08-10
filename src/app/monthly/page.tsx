@@ -1,7 +1,10 @@
 'use client';
 
 import { format, getDaysInMonth, startOfMonth } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 import { useEffect, useState } from 'react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -34,6 +37,7 @@ interface MonthlyData {
 export default function MonthlyPage() {
   const [data, setData] = useState<MonthlyData>({ totalHours: 0, totalMinutes: 0, outages: [], scope: 'monthly' });
   const [loading, setLoading] = useState(true);
+  const [generatingPDF, setGeneratingPDF] = useState(false);
 
   useEffect(() => {
     const fetchMonthly = async () => {
@@ -52,6 +56,153 @@ export default function MonthlyPage() {
 
     fetchMonthly();
   }, []);
+
+  const generatePDF = () => {
+    setGeneratingPDF(true);
+    
+    try {
+      // Create new PDF document in A4 landscape format
+      const doc = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      // Helper function to check if outage is during router maintenance time (01:00-01:02 AM GMT+6)
+      const isRouterMaintenanceTime = (outage: any) => {
+        const downTime = toZonedTime(new Date(outage.start), 'Asia/Dhaka');
+        const upTime = outage.end ? toZonedTime(new Date(outage.end), 'Asia/Dhaka') : null;
+        
+        const downHour = downTime.getHours();
+        const downMinute = downTime.getMinutes();
+        const upHour = upTime ? upTime.getHours() : null;
+        const upMinute = upTime ? upTime.getMinutes() : null;
+        
+        // Check if down time is 01:00, 01:01, or 01:02
+        const isDownMaintenanceTime = downHour === 1 && (downMinute === 0 || downMinute === 1 || downMinute === 2);
+        
+        // Check if up time is 01:00, 01:01, or 01:02
+        const isUpMaintenanceTime = upHour === 1 && (upMinute === 0 || upMinute === 1 || upMinute === 2);
+        
+        // Exclude if both down and up times are within maintenance window
+        return isDownMaintenanceTime && isUpMaintenanceTime;
+      };
+      
+      // Filter out router maintenance times for PDF
+      const filteredOutages = data.outages.filter((outage: any) => !isRouterMaintenanceTime(outage));
+
+      // Get current month and year
+      const currentDate = new Date();
+      const monthYear = format(currentDate, 'MMMM yyyy');
+      
+      // Add title - centered for landscape mode
+      const pageWidth = doc.internal.pageSize.getWidth();
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Generator Runtime Log', pageWidth / 2, 20, { align: 'center' });
+      
+      // Add month/year subtitle - centered
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      doc.text(monthYear, pageWidth / 2, 28, { align: 'center' });
+      
+      // Prepare table data using filtered outages
+      const tableData = filteredOutages.map((outage: any, index: number) => {
+        const runtime = outage.durationMinutes ? `${Math.floor(outage.durationMinutes / 60)}h ${outage.durationMinutes % 60}m` : '-';
+        const date = format(toZonedTime(new Date(outage.start), 'Asia/Dhaka'), 'dd/MM/yy'); // Changed to DD/MM/YY format
+        
+        return [
+          (index + 1).toString(), // Serial No
+          date, // Date (DDMMYY format)
+          '', // Fuel(Ltr) - empty for manual entry
+          '', // Mobil(Ltr) - empty for manual entry
+          format(toZonedTime(new Date(outage.start), 'Asia/Dhaka'), 'HH:mm'), // PDB Down Time
+          outage.end ? format(toZonedTime(new Date(outage.end), 'Asia/Dhaka'), 'HH:mm') : '-', // PDB Up Time
+          runtime, // Generator Total Runtime
+          '', // Generator Name (empty for manual entry)
+          'Loadshedding / PDB Maintenance / Others', // Remarks
+          '' // Signature (empty for manual entry)
+        ];
+      });
+      
+      // Add table with borders
+      autoTable(doc, {
+        head: [[
+          'Serial No',
+          'Date',
+          'Fuel(Ltr)',
+          'Mobil(Ltr)',
+          'PDB Down Time',
+          'PDB Up Time',
+          'Generator Total Runtime',
+          'Generator Name',
+          'Remarks',
+          'Signature'
+        ]],
+        body: tableData,
+        startY: 35,
+        theme: 'grid',
+        styles: {
+          fontSize: 10,
+          cellPadding: 3,
+          textColor: [0, 0, 0], // Black text
+          lineColor: [0, 0, 0], // Black borders
+          lineWidth: 0.5,
+          font: 'helvetica',
+          halign: 'center',
+          valign: 'middle'
+        },
+        headStyles: {
+          fillColor: [255, 255, 255], // White background
+          textColor: [0, 0, 0], // Black text
+          fontStyle: 'bold',
+          lineColor: [0, 0, 0], // Black borders
+          lineWidth: 0.5
+        },
+        bodyStyles: {
+          fillColor: [255, 255, 255], // White background
+          textColor: [0, 0, 0], // Black text
+          lineColor: [0, 0, 0], // Black borders
+          lineWidth: 0.5
+        },
+        columnStyles: {
+          0: { cellWidth: 18 }, // Serial No
+          1: { cellWidth: 22 }, // Date
+          2: { cellWidth: 20 }, // Fuel(Ltr)
+          3: { cellWidth: 20 }, // Mobil(Ltr)
+          4: { cellWidth: 22 }, // PDB Down Time
+          5: { cellWidth: 22 }, // PDB Up Time
+          6: { cellWidth: 28 }, // Generator Total Runtime
+          7: { cellWidth: 28 }, // Generator Name
+          8: { cellWidth: 60 }, // Remarks (made wider)
+          9: { cellWidth: 25 }  // Signature
+        },
+        margin: { top: 35, right: 10, bottom: 20, left: 10 },
+        didDrawPage: function(data) {
+          // Add page number
+          const pageCount = doc.getNumberOfPages();
+          doc.setFontSize(10);
+          doc.setFont('helvetica', 'normal');
+          doc.text(
+            `Page ${data.pageNumber} of ${pageCount}`,
+            doc.internal.pageSize.getWidth() / 2,
+            doc.internal.pageSize.getHeight() - 10,
+            { align: 'center' }
+          );
+        }
+      });
+      
+      // Save the PDF
+      const fileName = `Generator_Runtime_Log_${format(currentDate, 'MMMM_yyyy')}.pdf`;
+      doc.save(fileName);
+      
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Failed to generate PDF. Please try again.');
+    } finally {
+      setGeneratingPDF(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -77,7 +228,7 @@ export default function MonthlyPage() {
   const dailyData = Array(daysInMonth).fill(0);
   
   data.outages.forEach((outage: any) => {
-    const outageDate = new Date(outage.start);
+    const outageDate = toZonedTime(new Date(outage.start), 'Asia/Dhaka');
     const day = outageDate.getDate() - 1; // 0-indexed
     if (day >= 0 && day < daysInMonth) {
       dailyData[day] += (outage.durationMinutes || 0) / 60; // Convert to hours
@@ -126,7 +277,7 @@ export default function MonthlyPage() {
             const day = parseInt(context.label);
             const hours = context.parsed.y;
             const dayOutages = data.outages.filter((o: any) => 
-              new Date(o.start).getDate() === day
+              toZonedTime(new Date(o.start), 'Asia/Dhaka').getDate() === day
             );
             return [
               `${hours.toFixed(2)} hours`,
@@ -187,19 +338,43 @@ export default function MonthlyPage() {
     <div className="space-y-6">
       <div className="rounded-xl border p-6 bg-gradient-to-r from-blue-50 to-indigo-50">
         <h2 className="font-semibold mb-2 text-xl text-gradient-sunset">Monthly Summary</h2>
-        <div className="flex items-center gap-6">
-          <div>
-            <p className="text-2xl font-bold text-gradient-blue">{data.totalHours} hours</p>
-            <p className="text-sm text-gradient-purple">Total Load Shedding</p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            <div>
+              <p className="text-2xl font-bold text-gradient-blue">{data.totalHours} hours</p>
+              <p className="text-sm text-gradient-purple">Total Load Shedding</p>
+            </div>
+            <div>
+              <p className="text-lg font-semibold text-gradient-green">{data.outages.length}</p>
+              <p className="text-sm text-gradient-blue">Total Outages</p>
+            </div>
+            <div>
+              <p className="text-lg font-semibold text-gradient-orange">{Math.round(data.totalMinutes / data.outages.length || 0)} min</p>
+              <p className="text-sm text-gradient-red">Avg Duration</p>
+            </div>
           </div>
-          <div>
-            <p className="text-lg font-semibold text-gradient-green">{data.outages.length}</p>
-            <p className="text-sm text-gradient-blue">Total Outages</p>
-          </div>
-          <div>
-            <p className="text-lg font-semibold text-gradient-orange">{Math.round(data.totalMinutes / data.outages.length || 0)} min</p>
-            <p className="text-sm text-gradient-red">Avg Duration</p>
-          </div>
+          <button
+            onClick={generatePDF}
+            disabled={generatingPDF || data.outages.length === 0}
+            className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            {generatingPDF ? (
+              <>
+                <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Generating...
+              </>
+            ) : (
+              <>
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Download PDF
+              </>
+            )}
+          </button>
         </div>
       </div>
 
@@ -229,9 +404,9 @@ export default function MonthlyPage() {
             <tbody>
               {data.outages.map((o: any, index: number) => (
                 <tr key={o.start} className={`border-t hover:bg-gray-50 ${index % 2 === 0 ? 'bg-gray-25' : ''}`}>
-                  <td className="py-3 px-2 font-medium text-gradient-blue">{format(new Date(o.start), 'MMM dd, yyyy')}</td>
-                  <td className="py-3 px-2 text-gradient-red">{format(new Date(o.start), 'HH:mm')}</td>
-                  <td className="py-3 px-2 text-gradient-green">{o.end ? format(new Date(o.end), 'HH:mm') : 'Ongoing'}</td>
+                  <td className="py-3 px-2 font-medium text-gradient-blue">{format(toZonedTime(new Date(o.start), 'Asia/Dhaka'), 'MMM dd, yyyy')}</td>
+                  <td className="py-3 px-2 text-gradient-red">{format(toZonedTime(new Date(o.start), 'Asia/Dhaka'), 'HH:mm')}</td>
+                  <td className="py-3 px-2 text-gradient-green">{o.end ? format(toZonedTime(new Date(o.end), 'Asia/Dhaka'), 'HH:mm') : 'Ongoing'}</td>
                   <td className="py-3 px-2">
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-gradient-purple">
                       {o.durationMinutes ? `${Math.floor(o.durationMinutes / 60)}h ${o.durationMinutes % 60}m` : '-'}

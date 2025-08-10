@@ -1,6 +1,7 @@
 'use client';
 
 import { format } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 import { useState, useEffect } from 'react';
 
 const MONTHS = [
@@ -142,9 +143,9 @@ export default function YearlyPage() {
               <tbody>
                 {data.outages.map((o: any) => (
                   <tr key={o.start} className="border-t hover:bg-gray-50">
-                    <td className="py-2 text-gradient-blue">{format(new Date(o.start), 'PP')}</td>
-                    <td className="text-gradient-red">{format(new Date(o.start), 'pp')}</td>
-                    <td className="text-gradient-green">{o.end ? format(new Date(o.end), 'pp') : '-'}</td>
+                    <td className="py-2 text-gradient-blue">{format(toZonedTime(new Date(o.start), 'Asia/Dhaka'), 'PP')}</td>
+                    <td className="text-gradient-red">{format(toZonedTime(new Date(o.start), 'Asia/Dhaka'), 'pp')}</td>
+                    <td className="text-gradient-green">{o.end ? format(toZonedTime(new Date(o.end), 'Asia/Dhaka'), 'pp') : '-'}</td>
                     <td className="text-gradient-purple">{o.durationMinutes ?? '-'}</td>
                   </tr>
                 ))}

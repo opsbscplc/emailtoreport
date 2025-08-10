@@ -3,6 +3,8 @@
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { format } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -136,8 +138,8 @@ export default function Home() {
                 <div key={index} className="flex items-center justify-between p-4 bg-gradient-to-r from-red-50 to-orange-50 rounded-xl border border-red-100">
                   <div>
                     <p className="font-medium text-gradient-red">
-                      {new Date(outage.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      {outage.end && ` - ${new Date(outage.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
+                      {format(toZonedTime(new Date(outage.start), 'Asia/Dhaka'), 'HH:mm')}
+                      {outage.end && ` - ${format(toZonedTime(new Date(outage.end), 'Asia/Dhaka'), 'HH:mm')}`}
                     </p>
                     <p className="text-sm text-gradient-orange">
                       {outage.durationMinutes ? `${Math.floor(outage.durationMinutes / 60)}h ${outage.durationMinutes % 60}m` : 'Ongoing'}

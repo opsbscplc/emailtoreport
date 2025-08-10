@@ -5,6 +5,9 @@ import { getDb } from '@/lib/mongodb';
 import { getGmailClient, listLabelMessages, extractHeader, parsePdbSubject } from '@/lib/gmail';
 import { groupEventsIntoOutages } from '@/lib/outages';
 
+// Gmail system delay constant - emails are sent 187 seconds after actual PDB events
+const GMAIL_DELAY_SECONDS = 187;
+
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -33,7 +36,9 @@ export async function POST(req: NextRequest) {
     const dateStr = extractHeader(m, 'Date');
     const messageId = extractHeader(m, 'Message-Id') || m.id || '';
     if (!dateStr || !messageId) continue;
-    const at = new Date(dateStr);
+    // Gmail has a 187-second delay in sending emails, so subtract that to get actual outage time
+    const emailTimestamp = new Date(dateStr);
+    const at = new Date(emailTimestamp.getTime() - GMAIL_DELAY_SECONDS * 1000); // Subtract 187 seconds
     rawEvents.push({ type, at, messageId });
 
     await db.collection('emails').updateOne(

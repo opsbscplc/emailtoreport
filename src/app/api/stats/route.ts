@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
-import { startOfWeek, endOfWeek, startOfDay, endOfDay, getDay } from 'date-fns';
+import { startOfWeek, endOfWeek, startOfDay, endOfDay, getDay, addHours } from 'date-fns';
+import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 
 function toHours(minutes?: number) {
   return minutes ? Math.round((minutes / 60) * 100) / 100 : 0;
@@ -15,9 +16,16 @@ export async function GET(req: NextRequest) {
   const day = Number(url.searchParams.get('day') || new Date().getDate());
 
   if (scope === 'daily') {
-    // Create date range for the entire day
-    const dayStart = new Date(year, month - 1, day, 0, 0, 0); // Start of day
-    const dayEnd = new Date(year, month - 1, day, 23, 59, 59); // End of day
+    // Create date range for the entire day in GMT+6 (Bangladesh timezone)
+    const bangladeshTz = 'Asia/Dhaka';
+    
+    // Create start and end times in Bangladesh timezone
+    const localDayStart = new Date(year, month - 1, day, 0, 0, 0);
+    const localDayEnd = new Date(year, month - 1, day, 23, 59, 59);
+    
+    // Convert to UTC for database query
+    const dayStart = fromZonedTime(localDayStart, bangladeshTz);
+    const dayEnd = fromZonedTime(localDayEnd, bangladeshTz);
     
     const outages = await db.collection('outages').find({
       start: {
@@ -41,9 +49,16 @@ export async function GET(req: NextRequest) {
   }
 
   if (scope === 'monthly') {
-    // Create date range for the entire month
-    const monthStart = new Date(year, month - 1, 1); // First day of month
-    const monthEnd = new Date(year, month, 0, 23, 59, 59); // Last day of month
+    // Create date range for the entire month in GMT+6 (Bangladesh timezone)
+    const bangladeshTz = 'Asia/Dhaka';
+    
+    // Create start and end times in Bangladesh timezone
+    const localMonthStart = new Date(year, month - 1, 1, 0, 0, 0); // First day of month
+    const localMonthEnd = new Date(year, month, 0, 23, 59, 59); // Last day of month
+    
+    // Convert to UTC for database query
+    const monthStart = fromZonedTime(localMonthStart, bangladeshTz);
+    const monthEnd = fromZonedTime(localMonthEnd, bangladeshTz);
     
     const outages = await db.collection('outages').find({
       start: {
@@ -73,14 +88,16 @@ export async function GET(req: NextRequest) {
       // Filter for specific month (1-12) with Bangladesh timezone consideration
       const filterMonth = parseInt(monthParam) - 1; // Convert to 0-based month
       
-      // For Bangladesh timezone (UTC+6), extend the range to catch timezone boundary outages
-      let monthStart = new Date(Date.UTC(year, filterMonth, 1, 0, 0, 0));
-      let monthEnd = new Date(Date.UTC(year, filterMonth + 1, 0, 23, 59, 59)); // Last day of month
+      // Create date range for specific month in GMT+6 (Bangladesh timezone)
+      const bangladeshTz = 'Asia/Dhaka';
       
-      // For January, include December 31st of previous year to catch Bangladesh timezone outages
-      if (filterMonth === 0) { // January
-        monthStart = new Date(Date.UTC(year - 1, 11, 31, 18, 0, 0)); // Dec 31, 18:00 UTC = Jan 1, 00:00 Bangladesh
-      }
+      // Create start and end times in Bangladesh timezone
+      const localMonthStart = new Date(year, filterMonth, 1, 0, 0, 0); // First day of month
+      const localMonthEnd = new Date(year, filterMonth + 1, 0, 23, 59, 59); // Last day of month
+      
+      // Convert to UTC for database query
+      const monthStart = fromZonedTime(localMonthStart, bangladeshTz);
+      const monthEnd = fromZonedTime(localMonthEnd, bangladeshTz);
       
       const outages = await db.collection('outages').find({
         start: {
@@ -102,9 +119,16 @@ export async function GET(req: NextRequest) {
       });
     }
     
-    // Default: Create date range for the entire year (January 1st to December 31st)
-    const yearStart = new Date(Date.UTC(year, 0, 1, 0, 0, 0)); // January 1st UTC
-    const yearEnd = new Date(Date.UTC(year, 11, 31, 23, 59, 59)); // December 31st UTC
+    // Default: Create date range for the entire year in GMT+6 (Bangladesh timezone)
+    const bangladeshTz = 'Asia/Dhaka';
+    
+    // Create start and end times in Bangladesh timezone
+    const localYearStart = new Date(year, 0, 1, 0, 0, 0); // January 1st
+    const localYearEnd = new Date(year, 11, 31, 23, 59, 59); // December 31st
+    
+    // Convert to UTC for database query
+    const yearStart = fromZonedTime(localYearStart, bangladeshTz);
+    const yearEnd = fromZonedTime(localYearEnd, bangladeshTz);
     
     const outages = await db.collection('outages').find({
       start: {
@@ -126,9 +150,16 @@ export async function GET(req: NextRequest) {
   }
 
   if (scope === 'weekly') {
-    const now = new Date();
-    const weekStart = startOfWeek(now, { weekStartsOn: 0 }); // Sunday
-    const weekEnd = endOfWeek(now, { weekStartsOn: 0 }); // Saturday
+    const bangladeshTz = 'Asia/Dhaka';
+    
+    // Get current time in Bangladesh timezone
+    const now = toZonedTime(new Date(), bangladeshTz);
+    const localWeekStart = startOfWeek(now, { weekStartsOn: 0 }); // Sunday
+    const localWeekEnd = endOfWeek(now, { weekStartsOn: 0 }); // Saturday
+    
+    // Convert to UTC for database query
+    const weekStart = fromZonedTime(localWeekStart, bangladeshTz);
+    const weekEnd = fromZonedTime(localWeekEnd, bangladeshTz);
     
     // Get all outages for the current week
     const outages = await db.collection('outages').find({

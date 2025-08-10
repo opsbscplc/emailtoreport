@@ -1,4 +1,5 @@
 import { format, startOfWeek, endOfWeek } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 
 async function fetchWeekly() {
   try {
@@ -16,7 +17,8 @@ async function fetchWeekly() {
 
 export default async function WeeklyPage() {
   const data = await fetchWeekly();
-  const now = new Date();
+  const bangladeshTz = 'Asia/Dhaka';
+  const now = toZonedTime(new Date(), bangladeshTz);
   const weekStart = startOfWeek(now, { weekStartsOn: 0 }); // Sunday
   const weekEnd = endOfWeek(now, { weekStartsOn: 0 }); // Saturday
   
@@ -48,9 +50,9 @@ export default async function WeeklyPage() {
             <tbody>
               {data.outages.map((o: any) => (
                 <tr key={o.start} className="border-t">
-                  <td className="py-2 text-gradient-blue">{format(new Date(o.start), 'EEE, MMM dd')}</td>
-                  <td className="text-gradient-red">{format(new Date(o.start), 'HH:mm')}</td>
-                  <td className="text-gradient-green">{o.end ? format(new Date(o.end), 'HH:mm') : 'Ongoing'}</td>
+                  <td className="py-2 text-gradient-blue">{format(toZonedTime(new Date(o.start), 'Asia/Dhaka'), 'EEE, MMM dd')}</td>
+                  <td className="text-gradient-red">{format(toZonedTime(new Date(o.start), 'Asia/Dhaka'), 'HH:mm')}</td>
+                  <td className="text-gradient-green">{o.end ? format(toZonedTime(new Date(o.end), 'Asia/Dhaka'), 'HH:mm') : 'Ongoing'}</td>
                   <td className="text-gradient-purple">
                     {o.durationMinutes 
                       ? `${Math.floor(o.durationMinutes / 60)}h ${o.durationMinutes % 60}m`

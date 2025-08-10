@@ -1,6 +1,9 @@
 /* eslint-disable no-console */
 const { MongoClient } = require('mongodb');
 const { google } = require('googleapis');
+
+// Gmail system delay constant - emails are sent 187 seconds after actual PDB events
+const GMAIL_DELAY_SECONDS = 187;
 const { differenceInMinutes } = require('date-fns');
 
 async function main() {
@@ -76,7 +79,9 @@ async function main() {
     const dateStr = header('Date');
     const messageId = header('Message-Id') || msg.data.id;
     if (!dateStr || !messageId) continue;
-    const at = new Date(dateStr);
+    // Gmail has a 187-second delay in sending emails, so subtract that to get actual outage time
+    const emailTimestamp = new Date(dateStr);
+    const at = new Date(emailTimestamp.getTime() - GMAIL_DELAY_SECONDS * 1000); // Subtract 187 seconds
     const type = isDown ? 'down' : 'up';
     try {
       await db.collection('emails').updateOne(
