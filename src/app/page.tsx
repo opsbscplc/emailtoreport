@@ -15,8 +15,10 @@ export default function Home() {
       const fetchStats = async () => {
         try {
           const response = await fetch('/api/stats?scope=daily');
-          const data = await response.json();
-          setStats(data);
+          if (response.ok) {
+            const data = await response.json();
+            setStats(data);
+          }
         } catch (error) {
           console.error('Failed to fetch stats:', error);
         }

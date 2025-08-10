@@ -1,15 +1,24 @@
 import { format, startOfWeek, endOfWeek } from 'date-fns';
 
 async function fetchWeekly() {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/stats?scope=weekly`, { cache: 'no-store' });
-  return res.json();
+  try {
+    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+    const res = await fetch(`${baseUrl}/api/stats?scope=weekly`, { cache: 'no-store' });
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
+    return await res.json();
+  } catch (error) {
+    console.error('Failed to fetch weekly stats:', error);
+    return { totalHours: 0, totalMinutes: 0, outages: [], dailyBreakdown: Array(7).fill({ hours: 0, count: 0 }), scope: 'weekly' };
+  }
 }
 
 export default async function WeeklyPage() {
   const data = await fetchWeekly();
   const now = new Date();
-  const weekStart = startOfWeek(now, { weekStartsOn: 1 }); // Monday
-  const weekEnd = endOfWeek(now, { weekStartsOn: 1 }); // Sunday
+  const weekStart = startOfWeek(now, { weekStartsOn: 0 }); // Sunday
+  const weekEnd = endOfWeek(now, { weekStartsOn: 0 }); // Saturday
   
   return (
     <div className="space-y-6">
@@ -58,7 +67,7 @@ export default async function WeeklyPage() {
       <div className="rounded-xl border p-6">
         <h3 className="font-semibold mb-2">Daily Breakdown</h3>
         <div className="grid grid-cols-7 gap-2 text-xs">
-          {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, index) => {
+          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => {
             const dayOutages = data.dailyBreakdown?.[index] || { hours: 0, count: 0 };
             return (
               <div key={day} className="text-center p-2 bg-gray-50 rounded">

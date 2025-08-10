@@ -1,8 +1,17 @@
 import { format } from 'date-fns';
 
 async function fetchMonthly() {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/stats?scope=monthly`, { cache: 'no-store' });
-  return res.json();
+  try {
+    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+    const res = await fetch(`${baseUrl}/api/stats?scope=monthly`, { cache: 'no-store' });
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
+    return await res.json();
+  } catch (error) {
+    console.error('Failed to fetch monthly stats:', error);
+    return { totalHours: 0, totalMinutes: 0, outages: [], scope: 'monthly' };
+  }
 }
 
 export default async function MonthlyPage() {
