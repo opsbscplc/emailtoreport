@@ -14,9 +14,10 @@ export default function Home() {
       <div className="rounded-xl border p-6">
         <h2 className="font-semibold mb-2">Views</h2>
         <ul className="list-disc pl-5 text-sm space-y-1">
-          <li>Daily: total hours and incidents</li>
-          <li>Monthly: total hours and breakdown</li>
-          <li>Yearly: total hours and breakdown</li>
+          <li><a href="/daily" className="text-blue-600 hover:underline">Daily</a>: total hours and incidents</li>
+          <li><a href="/weekly" className="text-blue-600 hover:underline">Weekly</a>: current week summary with daily breakdown</li>
+          <li><a href="/monthly" className="text-blue-600 hover:underline">Monthly</a>: total hours and breakdown</li>
+          <li><a href="/yearly" className="text-blue-600 hover:underline">Yearly</a>: total hours and breakdown</li>
         </ul>
       </div>
     </div>
