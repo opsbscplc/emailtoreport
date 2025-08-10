@@ -25,11 +25,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+    <html lang="en" className="bg-white">
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white`}>
         <SessionProvider>
           <Header />
-          <main className="mx-auto max-w-6xl px-4 py-6 relative">{children}</main>
+          <main className="mx-auto max-w-6xl px-4 py-6 relative bg-white">{children}</main>
         </SessionProvider>
       </body>
     </html>

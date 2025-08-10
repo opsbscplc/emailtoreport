@@ -29,10 +29,10 @@ export default function Home() {
 
   if (!session) {
     return (
-      <div className="min-h-[80vh] bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      <div className="min-h-[80vh] bg-white">
         <div className="flex items-center justify-center min-h-[80vh]">
           <div className="max-w-md w-full mx-4">
-            <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-8 text-center">
+            <div className="bg-white rounded-3xl shadow-xl border border-gray-200 p-8 text-center">
               <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <span className="text-2xl">⚡</span>
               </div>
@@ -55,7 +55,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-[80vh] bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <div className="min-h-[80vh] bg-white">
       {/* Welcome Header */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-8 rounded-2xl mb-8 shadow-xl">
         <div className="flex items-center justify-between">
