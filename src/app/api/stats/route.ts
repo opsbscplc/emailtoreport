@@ -70,20 +70,12 @@ export async function GET(req: NextRequest) {
     const yearStart = new Date(Date.UTC(year, 0, 1, 0, 0, 0)); // January 1st UTC
     const yearEnd = new Date(Date.UTC(year, 11, 31, 23, 59, 59)); // December 31st UTC
     
-    console.log(`Yearly query for ${year}: ${yearStart.toISOString()} to ${yearEnd.toISOString()}`);
-    
     const outages = await db.collection('outages').find({
       start: {
         $gte: yearStart,
         $lte: yearEnd
       }
     }).sort({ start: 1 }).toArray();
-    
-    console.log(`Found ${outages.length} outages for year ${year}`);
-    if (outages.length > 0) {
-      console.log('First outage:', outages[0].start);
-      console.log('Last outage:', outages[outages.length - 1].start);
-    }
     
     const totalMinutes = outages.reduce((acc, o) => acc + (o.durationMinutes || 0), 0);
     return NextResponse.json({ 
