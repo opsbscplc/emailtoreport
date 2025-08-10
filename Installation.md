@@ -214,9 +214,9 @@ Step B6) Post-deploy checks
 4. Test sign-in and a manual sync; then rely on the GitHub Actions cron for ongoing ingestion.
 
 ### 7) Production checks
-- Set `NEXTAUTH_URL` to your HTTPS domain.
+- Set `NEXTAUTH_URL` to your HTTPS domain (e.g., `https://new.alternativechoice.org`).
 - Ensure MongoDB Atlas allows your VPS IP.
-- Verify Google OAuth redirect URI in GCP: `https://your-domain/api/auth/callback/google`.
+- Verify Google OAuth redirect URI in GCP: `https://new.alternativechoice.org/api/auth/callback/google`.
 - Sign in via Google in production, click "Sync Now" once to validate.
 - GitHub Actions cron runs independently of the app deployment, as long as secrets are set.
 
