@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
-import { startOfWeek, endOfWeek, startOfDay, endOfDay, getDay, addHours } from 'date-fns';
+import { startOfWeek, endOfWeek, getDay } from 'date-fns';
 import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 
 function toHours(minutes?: number) {
@@ -23,13 +23,13 @@ function validateInput(year: number, month?: number, day?: number): string | nul
 }
 
 // Cache for frequently accessed data (in-memory cache for demo, consider Redis for production)
-const cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
+const cache = new Map<string, { data: unknown; timestamp: number; ttl: number }>();
 
 function getCacheKey(scope: string, year: number, month?: number, day?: number, filterMonth?: number): string {
   return `${scope}_${year}_${month || 'null'}_${day || 'null'}_${filterMonth || 'null'}`;
 }
 
-function getFromCache(key: string): any | null {
+function getFromCache(key: string): unknown | null {
   const cached = cache.get(key);
   if (!cached) return null;
   
@@ -42,7 +42,7 @@ function getFromCache(key: string): any | null {
   return cached.data;
 }
 
-function setCache(key: string, data: any, ttlMinutes: number = 5): void {
+function setCache(key: string, data: unknown, ttlMinutes: number = 5): void {
   // Limit cache size to prevent memory issues
   if (cache.size > 100) {
     const firstKey = cache.keys().next().value;
@@ -82,6 +82,9 @@ export async function GET(req: NextRequest) {
     }
 
     const db = await getDb();
+
+
+    
 
   if (scope === 'daily') {
     // Create date range for the entire day in GMT+6 (Bangladesh timezone)

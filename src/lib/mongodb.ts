@@ -53,5 +53,3 @@ export async function getDb(): Promise<Db> {
 export async function getClient(): Promise<MongoClient> {
   return clientPromise;
 }
-
-

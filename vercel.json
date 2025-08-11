@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "framework": "nextjs",
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "functions": {
+    "src/app/api/*/route.ts": {
+      "maxDuration": 60
+    },
+    "src/app/api/*/*/route.ts": {
+      "maxDuration": 60
+    }
+  },
+  "regions": ["iad1"],
+  "crons": []
+}
