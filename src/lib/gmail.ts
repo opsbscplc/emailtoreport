@@ -65,26 +65,42 @@ export async function listLabelMessages(
 
   if (allMessages.length === 0) return [];
 
-  // Fetch detailed message data in batches to avoid rate limits
-  const batchSize = 100;
+  // Fetch detailed message data in optimized batches with rate limiting
+  const batchSize = 50; // Reduced batch size to be more conservative with Gmail API
   const detailed: GmailMessage[] = [];
   
   for (let i = 0; i < allMessages.length; i += batchSize) {
     const batch = allMessages.slice(i, i + batchSize);
-    const batchDetailed = await Promise.all(
-      batch.map((m) =>
+    
+    try {
+      // Process batch with proper error handling
+      const batchPromises = batch.map((m) =>
         gmail.users.messages.get({ 
           userId, 
           id: m.id as string, 
           format: 'metadata', 
           metadataHeaders: ['Subject', 'Date', 'Message-Id'] 
-        }).then((r) => r.data)
-      )
-    );
-    detailed.push(...batchDetailed);
-    
-    if (fromDate && batch.length > 0) {
-      console.log(`Processed ${detailed.length}/${allMessages.length} messages`);
+        }).then((r) => r.data).catch((error) => {
+          console.error(`Failed to fetch message ${m.id}:`, error.message);
+          return null; // Return null for failed requests
+        })
+      );
+      
+      const batchResults = await Promise.all(batchPromises);
+      const validResults = batchResults.filter((result): result is GmailMessage => result !== null);
+      detailed.push(...validResults);
+      
+      // Add a small delay between batches to respect rate limits
+      if (i + batchSize < allMessages.length) {
+        await new Promise(resolve => setTimeout(resolve, 100)); // 100ms delay
+      }
+      
+      if (fromDate && batch.length > 0) {
+        console.log(`Processed ${detailed.length}/${allMessages.length} messages (${validResults.length}/${batch.length} successful in this batch)`);
+      }
+    } catch (error) {
+      console.error(`Batch processing error for batch starting at ${i}:`, error);
+      // Continue with next batch instead of failing completely
     }
   }
   

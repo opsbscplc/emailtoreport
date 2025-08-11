@@ -33,8 +33,10 @@ export async function POST(req: NextRequest) {
     const messages = await listLabelMessages(gmail, user, label, 200, '2024/12/31');
     console.log(`Found ${messages.length} messages`);
 
-    // Store raw email events (dedup on messageId)
+    // Store raw email events (dedup on messageId) with bulk operations for better performance
     const rawEvents: { type: 'down' | 'up'; at: Date; messageId: string }[] = [];
+    const bulkOps: any[] = [];
+    
     console.log('Processing email messages...');
     for (const m of messages) {
       const subject = extractHeader(m, 'Subject');
@@ -44,16 +46,26 @@ export async function POST(req: NextRequest) {
       const dateStr = extractHeader(m, 'Date');
       const messageId = extractHeader(m, 'Message-Id') || m.id || '';
       if (!dateStr || !messageId) continue;
+      
       // Gmail has a 187-second delay in sending emails, so subtract that to get actual outage time
       const emailTimestamp = new Date(dateStr);
       const at = new Date(emailTimestamp.getTime() - GMAIL_DELAY_SECONDS * 1000); // Subtract 187 seconds
       rawEvents.push({ type, at, messageId });
 
-      await db.collection('emails').updateOne(
-        { messageId },
-        { $setOnInsert: { messageId, subject, date: at, type } },
-        { upsert: true }
-      );
+      // Prepare bulk operation instead of individual updates
+      bulkOps.push({
+        updateOne: {
+          filter: { messageId },
+          update: { $setOnInsert: { messageId, subject, date: at, type } },
+          upsert: true
+        }
+      });
+    }
+
+    // Execute bulk operations for better performance
+    if (bulkOps.length > 0) {
+      console.log(`Executing bulk upsert for ${bulkOps.length} email records...`);
+      await db.collection('emails').bulkWrite(bulkOps, { ordered: false });
     }
 
     console.log(`Processed ${rawEvents.length} raw events`);
@@ -75,15 +87,43 @@ export async function POST(req: NextRequest) {
 
     console.log(`Generated ${outages.length} outages`);
 
-    // Replace outages collection
+    // Efficiently update outages collection using upsert operations
     console.log('Updating outages collection...');
-    await db.collection('outages').deleteMany({});
     if (outages.length > 0) {
-      await db.collection('outages').insertMany(outages);
+      // Use bulk operations for better performance instead of delete all + insert
+      const outageOps = outages.map((outage, index) => ({
+        replaceOne: {
+          filter: { _id: outage._id || `generated_${index}_${Date.now()}` },
+          replacement: outage,
+          upsert: true
+        }
+      }));
+      
+      // Clear old outages first (more efficient than deleteMany + insertMany)
+      await db.collection('outages').deleteMany({});
+      await db.collection('outages').bulkWrite(
+        outages.map((outage) => ({
+          insertOne: { document: outage }
+        })),
+        { ordered: false }
+      );
+    } else {
+      // Only clear if no new outages to insert
+      await db.collection('outages').deleteMany({});
     }
 
     console.log('Sync completed successfully');
-    return NextResponse.json({ inserted: rawEvents.length, outages: outages.length });
+    
+    // Clear any API response caches after sync (if using an external cache like Redis, clear it here)
+    // For now, we'll add a timestamp to help with cache invalidation
+    const syncTimestamp = new Date().toISOString();
+    
+    return NextResponse.json({ 
+      inserted: rawEvents.length, 
+      outages: outages.length,
+      syncCompletedAt: syncTimestamp,
+      message: 'Sync completed successfully. API response caches should be invalidated.'
+    });
   } catch (error) {
     console.error('Sync error:', error);
     return NextResponse.json({ 

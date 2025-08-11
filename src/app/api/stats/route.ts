@@ -7,13 +7,81 @@ function toHours(minutes?: number) {
   return minutes ? Math.round((minutes / 60) * 100) / 100 : 0;
 }
 
+// Input validation helper
+function validateInput(year: number, month?: number, day?: number): string | null {
+  const currentYear = new Date().getFullYear();
+  if (year < 2020 || year > currentYear + 5) {
+    return `Invalid year: ${year}. Must be between 2020 and ${currentYear + 5}`;
+  }
+  if (month !== undefined && (month < 1 || month > 12)) {
+    return `Invalid month: ${month}. Must be between 1 and 12`;
+  }
+  if (day !== undefined && (day < 1 || day > 31)) {
+    return `Invalid day: ${day}. Must be between 1 and 31`;
+  }
+  return null;
+}
+
+// Cache for frequently accessed data (in-memory cache for demo, consider Redis for production)
+const cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
+
+function getCacheKey(scope: string, year: number, month?: number, day?: number, filterMonth?: number): string {
+  return `${scope}_${year}_${month || 'null'}_${day || 'null'}_${filterMonth || 'null'}`;
+}
+
+function getFromCache(key: string): any | null {
+  const cached = cache.get(key);
+  if (!cached) return null;
+  
+  const now = Date.now();
+  if (now - cached.timestamp > cached.ttl) {
+    cache.delete(key);
+    return null;
+  }
+  
+  return cached.data;
+}
+
+function setCache(key: string, data: any, ttlMinutes: number = 5): void {
+  // Limit cache size to prevent memory issues
+  if (cache.size > 100) {
+    const firstKey = cache.keys().next().value;
+    if (firstKey) {
+      cache.delete(firstKey);
+    }
+  }
+  
+  cache.set(key, {
+    data,
+    timestamp: Date.now(),
+    ttl: ttlMinutes * 60 * 1000 // Convert to milliseconds
+  });
+}
+
 export async function GET(req: NextRequest) {
-  const db = await getDb();
-  const url = new URL(req.url);
-  const scope = url.searchParams.get('scope') || 'daily';
-  const year = Number(url.searchParams.get('year') || new Date().getFullYear());
-  const month = Number(url.searchParams.get('month') || new Date().getMonth() + 1);
-  const day = Number(url.searchParams.get('day') || new Date().getDate());
+  try {
+    const url = new URL(req.url);
+    const scope = url.searchParams.get('scope') || 'daily';
+    const year = Number(url.searchParams.get('year') || new Date().getFullYear());
+    const month = Number(url.searchParams.get('month') || new Date().getMonth() + 1);
+    const day = Number(url.searchParams.get('day') || new Date().getDate());
+    const filterMonthParam = url.searchParams.get('filterMonth');
+    const filterMonth = filterMonthParam ? parseInt(filterMonthParam) : undefined;
+
+    // Input validation
+    const validationError = validateInput(year, scope === 'daily' ? month : undefined, scope === 'daily' ? day : undefined);
+    if (validationError) {
+      return NextResponse.json({ error: validationError }, { status: 400 });
+    }
+
+    // Check cache first
+    const cacheKey = getCacheKey(scope, year, month, day, filterMonth);
+    const cachedData = getFromCache(cacheKey);
+    if (cachedData) {
+      return NextResponse.json({ ...cachedData, cached: true });
+    }
+
+    const db = await getDb();
 
   if (scope === 'daily') {
     // Create date range for the entire day in GMT+6 (Bangladesh timezone)
@@ -27,15 +95,21 @@ export async function GET(req: NextRequest) {
     const dayStart = fromZonedTime(localDayStart, bangladeshTz);
     const dayEnd = fromZonedTime(localDayEnd, bangladeshTz);
     
+    // Optimized query with projection to reduce data transfer
     const outages = await db.collection('outages').find({
       start: {
         $gte: dayStart,
         $lte: dayEnd
       }
-    }).sort({ start: 1 }).toArray();
+    }).sort({ start: 1 }).project({
+      start: 1,
+      end: 1,
+      durationMinutes: 1,
+      events: 1
+    }).toArray();
     
     const totalMinutes = outages.reduce((acc, o) => acc + (o.durationMinutes || 0), 0);
-    return NextResponse.json({ 
+    const response = { 
       scope, 
       year, 
       month, 
@@ -45,7 +119,12 @@ export async function GET(req: NextRequest) {
       totalMinutes, 
       totalHours: toHours(totalMinutes), 
       outages 
-    });
+    };
+    
+    // Cache the response for 5 minutes (data doesn't change frequently)
+    setCache(cacheKey, response, 5);
+    
+    return NextResponse.json(response);
   }
 
   if (scope === 'monthly') {
@@ -60,15 +139,21 @@ export async function GET(req: NextRequest) {
     const monthStart = fromZonedTime(localMonthStart, bangladeshTz);
     const monthEnd = fromZonedTime(localMonthEnd, bangladeshTz);
     
+    // Optimized query with projection
     const outages = await db.collection('outages').find({
       start: {
         $gte: monthStart,
         $lte: monthEnd
       }
-    }).sort({ start: 1 }).toArray();
+    }).sort({ start: 1 }).project({
+      start: 1,
+      end: 1,
+      durationMinutes: 1,
+      events: 1
+    }).toArray();
     
     const totalMinutes = outages.reduce((acc, o) => acc + (o.durationMinutes || 0), 0);
-    return NextResponse.json({ 
+    const response = { 
       scope, 
       year, 
       month, 
@@ -77,46 +162,60 @@ export async function GET(req: NextRequest) {
       totalMinutes, 
       totalHours: toHours(totalMinutes), 
       outages 
-    });
+    };
+    
+    // Cache monthly data for longer (15 minutes) as it changes less frequently
+    setCache(cacheKey, response, 15);
+    
+    return NextResponse.json(response);
   }
 
   if (scope === 'yearly') {
-    // Check if a specific month is requested for pagination
-    const monthParam = url.searchParams.get('filterMonth');
-    
-    if (monthParam) {
+    // Check if a specific month is requested for pagination    
+    if (filterMonth) {
       // Filter for specific month (1-12) with Bangladesh timezone consideration
-      const filterMonth = parseInt(monthParam) - 1; // Convert to 0-based month
+      const filterMonthIndex = filterMonth - 1; // Convert to 0-based month
       
       // Create date range for specific month in GMT+6 (Bangladesh timezone)
       const bangladeshTz = 'Asia/Dhaka';
       
       // Create start and end times in Bangladesh timezone
-      const localMonthStart = new Date(year, filterMonth, 1, 0, 0, 0); // First day of month
-      const localMonthEnd = new Date(year, filterMonth + 1, 0, 23, 59, 59); // Last day of month
+      const localMonthStart = new Date(year, filterMonthIndex, 1, 0, 0, 0); // First day of month
+      const localMonthEnd = new Date(year, filterMonthIndex + 1, 0, 23, 59, 59); // Last day of month
       
       // Convert to UTC for database query
       const monthStart = fromZonedTime(localMonthStart, bangladeshTz);
       const monthEnd = fromZonedTime(localMonthEnd, bangladeshTz);
       
+      // Optimized query with projection
       const outages = await db.collection('outages').find({
         start: {
           $gte: monthStart,
           $lte: monthEnd
         }
-      }).sort({ start: 1 }).toArray();
+      }).sort({ start: 1 }).project({
+        start: 1,
+        end: 1,
+        durationMinutes: 1,
+        events: 1
+      }).toArray();
       
       const totalMinutes = outages.reduce((acc, o) => acc + (o.durationMinutes || 0), 0);
-      return NextResponse.json({ 
+      const response = { 
         scope, 
         year,
-        filterMonth: parseInt(monthParam),
+        filterMonth: filterMonth,
         monthStart: monthStart.toISOString(),
         monthEnd: monthEnd.toISOString(),
         totalMinutes, 
         totalHours: toHours(totalMinutes), 
         outages 
-      });
+      };
+      
+      // Cache yearly filtered data for longer (30 minutes)
+      setCache(cacheKey, response, 30);
+      
+      return NextResponse.json(response);
     }
     
     // Default: Create date range for the entire year in GMT+6 (Bangladesh timezone)
@@ -130,15 +229,21 @@ export async function GET(req: NextRequest) {
     const yearStart = fromZonedTime(localYearStart, bangladeshTz);
     const yearEnd = fromZonedTime(localYearEnd, bangladeshTz);
     
+    // Optimized query with projection
     const outages = await db.collection('outages').find({
       start: {
         $gte: yearStart,
         $lte: yearEnd
       }
-    }).sort({ start: 1 }).toArray();
+    }).sort({ start: 1 }).project({
+      start: 1,
+      end: 1,
+      durationMinutes: 1,
+      events: 1
+    }).toArray();
     
     const totalMinutes = outages.reduce((acc, o) => acc + (o.durationMinutes || 0), 0);
-    return NextResponse.json({ 
+    const response = { 
       scope, 
       year, 
       yearStart: yearStart.toISOString(),
@@ -146,7 +251,12 @@ export async function GET(req: NextRequest) {
       totalMinutes, 
       totalHours: toHours(totalMinutes), 
       outages 
-    });
+    };
+    
+    // Cache yearly data for even longer (60 minutes)
+    setCache(cacheKey, response, 60);
+    
+    return NextResponse.json(response);
   }
 
   if (scope === 'weekly') {
@@ -161,13 +271,18 @@ export async function GET(req: NextRequest) {
     const weekStart = fromZonedTime(localWeekStart, bangladeshTz);
     const weekEnd = fromZonedTime(localWeekEnd, bangladeshTz);
     
-    // Get all outages for the current week
+    // Optimized query with projection for weekly data
     const outages = await db.collection('outages').find({
       start: {
         $gte: weekStart,
         $lte: weekEnd
       }
-    }).sort({ start: 1 }).toArray();
+    }).sort({ start: 1 }).project({
+      start: 1,
+      end: 1,
+      durationMinutes: 1,
+      events: 1
+    }).toArray();
     
     const totalMinutes = outages.reduce((acc, o) => acc + (o.durationMinutes || 0), 0);
     
@@ -180,7 +295,7 @@ export async function GET(req: NextRequest) {
       dailyBreakdown[dayOfWeek].count += 1;
     });
     
-    return NextResponse.json({ 
+    const response = { 
       scope, 
       weekStart: weekStart.toISOString(), 
       weekEnd: weekEnd.toISOString(),
@@ -188,10 +303,23 @@ export async function GET(req: NextRequest) {
       totalHours: toHours(totalMinutes), 
       outages,
       dailyBreakdown
-    });
+    };
+    
+    // Cache weekly data for shorter time (2 minutes) as it's more dynamic
+    setCache(cacheKey, response, 2);
+    
+    return NextResponse.json(response);
   }
 
-  return NextResponse.json({ error: 'Invalid scope' }, { status: 400 });
+    return NextResponse.json({ error: 'Invalid scope' }, { status: 400 });
+  } catch (error) {
+    console.error('Stats API error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    return NextResponse.json({ 
+      error: 'Internal server error', 
+      details: process.env.NODE_ENV === 'development' ? errorMessage : undefined 
+    }, { status: 500 });
+  }
 }
 
 

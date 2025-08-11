@@ -21,15 +21,32 @@ if (!global._mongoClientPromise) {
 
 clientPromise = global._mongoClientPromise;
 
+// Track if indexes have been created to avoid redundant operations
+let indexesCreated = false;
+
 export async function getDb(): Promise<Db> {
   const client = await clientPromise;
   const db = client.db(dbName);
-  // Ensure indexes once per cold start
-  await Promise.all([
-    db.collection('emails').createIndex({ messageId: 1 }, { unique: true }),
-    db.collection('outages').createIndex({ start: 1 }),
-    db.collection('outages').createIndex({ year: 1, month: 1, day: 1 }),
-  ]).catch(() => undefined);
+  
+  // Create indexes only once per process lifecycle (not per request)
+  if (!indexesCreated) {
+    await Promise.all([
+      // Existing indexes
+      db.collection('emails').createIndex({ messageId: 1 }, { unique: true }),
+      db.collection('outages').createIndex({ start: 1 }),
+      db.collection('outages').createIndex({ year: 1, month: 1, day: 1 }),
+      
+      // Performance optimization: Compound indexes for common query patterns
+      db.collection('outages').createIndex({ start: 1, end: 1 }, { background: true }),
+      db.collection('outages').createIndex({ start: 1, durationMinutes: 1 }, { background: true }),
+      db.collection('emails').createIndex({ date: 1, type: 1 }, { background: true }),
+      
+      // Sparse index for optional fields to improve query performance
+      db.collection('outages').createIndex({ end: 1 }, { sparse: true, background: true })
+    ]).catch(() => undefined);
+    indexesCreated = true;
+  }
+  
   return db;
 }
 
