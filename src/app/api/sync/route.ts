@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getDb } from '@/lib/mongodb';
-import { getGmailClient, listLabelMessages, extractHeader, parsePdbSubject } from '@/lib/gmail';
+import { listLabelMessages, extractHeader, parsePdbSubject } from '@/lib/gmail';
 import { groupEventsIntoOutages } from '@/lib/outages';
+import { google } from 'googleapis';
 
 // Gmail system delay constant - emails are sent 187 seconds after actual PDB events
 const GMAIL_DELAY_SECONDS = 187;
@@ -14,14 +15,27 @@ export async function POST(req: NextRequest) {
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const accessToken = (session as any).accessToken as string | undefined;
-    if (!accessToken) {
-      return NextResponse.json({ error: 'Missing Gmail access token. Re-login with Google.' }, { status: 400 });
-    }
 
     console.log('Starting sync process...');
 
-    const gmail = getGmailClient(accessToken);
+    // Use refresh token from environment variables like the sync script does
+    const {
+      GOOGLE_CLIENT_ID,
+      GOOGLE_CLIENT_SECRET,
+      GMAIL_REFRESH_TOKEN,
+    } = process.env;
+
+    if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
+      return NextResponse.json({ error: 'Missing Google OAuth credentials' }, { status: 500 });
+    }
+    if (!GMAIL_REFRESH_TOKEN) {
+      return NextResponse.json({ error: 'Missing Gmail refresh token' }, { status: 500 });
+    }
+
+    // Create OAuth2 client with refresh token (same as sync script)
+    const oauth2Client = new google.auth.OAuth2(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET);
+    oauth2Client.setCredentials({ refresh_token: GMAIL_REFRESH_TOKEN });
+    const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
     const user = process.env.GMAIL_USER || 'me';
     const label = process.env.GMAIL_LABEL_NAME || 'PDB Notifications';
     
