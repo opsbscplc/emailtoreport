@@ -35,8 +35,12 @@ export default function Home() {
         <div className="flex items-center justify-center min-h-[80vh]">
           <div className="max-w-md w-full mx-4">
             <div className="bg-white rounded-3xl shadow-xl border border-gray-200 p-8 text-center">
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <span className="text-2xl">⚡</span>
+              <div className="flex items-center justify-center mx-auto mb-6">
+                <img 
+                  src="https://bsccl.com.bd/uploads/site/logo.webp" 
+                  alt="BSCCL Logo" 
+                  className="h-16 w-auto object-contain"
+                />
               </div>
               <h1 className="text-2xl font-bold text-gradient-sunset mb-4">Load Shedding Tracker</h1>
               <p className="text-gradient-blue mb-8">
@@ -77,7 +81,7 @@ export default function Home() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
         <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20 hover:shadow-xl transition-all duration-200">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-green-600 rounded-xl flex items-center justify-center">
@@ -95,6 +99,16 @@ export default function Home() {
                           <h3 className="font-semibold text-gradient-green mb-1">Gmail Sync</h3>
                 <p className="text-sm text-gradient-blue">Update load shedding data</p>
         </div>
+
+        <Link href="/previous-day" className="block">
+          <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20 hover:shadow-xl transition-all duration-200 h-full">
+            <div className="w-12 h-12 bg-gradient-to-r from-pink-400 to-pink-600 rounded-xl flex items-center justify-center mb-4">
+              <span className="text-xl">⏮️</span>
+            </div>
+            <h3 className="font-semibold text-gradient-pink mb-1">Previous Day</h3>
+            <p className="text-sm text-gradient-purple">Yesterday's outages</p>
+          </div>
+        </Link>
 
         <Link href="/daily" className="block">
           <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20 hover:shadow-xl transition-all duration-200 h-full">
@@ -142,7 +156,7 @@ export default function Home() {
                       {outage.end && ` - ${format(toZonedTime(new Date(outage.end), 'Asia/Dhaka'), 'HH:mm')}`}
                     </p>
                     <p className="text-sm text-gradient-orange">
-                      {outage.durationMinutes ? `${Math.floor(outage.durationMinutes / 60)}h ${outage.durationMinutes % 60}m` : 'Ongoing'}
+                      {outage.durationMinutes !== undefined ? `${Math.floor(outage.durationMinutes / 60)}h ${outage.durationMinutes % 60}m` : 'Ongoing'}
                     </p>
                   </div>
                   <div className="text-2xl">⚡</div>

@@ -4,7 +4,7 @@ const { google } = require('googleapis');
 
 // Gmail system delay constant - emails are sent 187 seconds after actual PDB events
 const GMAIL_DELAY_SECONDS = 187;
-const { differenceInMinutes } = require('date-fns');
+// Removed differenceInMinutes import - now using custom duration calculation
 
 async function main() {
   const {
@@ -129,7 +129,18 @@ async function main() {
       if (current) {
         current.events.push(e);
         current.end = e.at;
-        current.durationMinutes = Math.max(0, differenceInMinutes(e.at, current.start));
+        // Calculate duration with proper rounding (any outage >= 1 second = at least 1 minute)
+        const durationMs = e.at.getTime() - current.start.getTime();
+        if (durationMs < 1000) {
+          // Less than 1 second = 0 minutes
+          current.durationMinutes = 0;
+        } else if (durationMs < 60000) {
+          // Between 1 second and 60 seconds = 1 minute  
+          current.durationMinutes = 1;
+        } else {
+          // 60+ seconds = round to nearest minute
+          current.durationMinutes = Math.round(durationMs / (1000 * 60));
+        }
         outages.push(current);
         current = null;
       }

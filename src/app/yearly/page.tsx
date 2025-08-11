@@ -146,7 +146,7 @@ export default function YearlyPage() {
                     <td className="py-2 text-gradient-blue">{format(toZonedTime(new Date(o.start), 'Asia/Dhaka'), 'PP')}</td>
                     <td className="text-gradient-red">{format(toZonedTime(new Date(o.start), 'Asia/Dhaka'), 'pp')}</td>
                     <td className="text-gradient-green">{o.end ? format(toZonedTime(new Date(o.end), 'Asia/Dhaka'), 'pp') : '-'}</td>
-                    <td className="text-gradient-purple">{o.durationMinutes ?? '-'}</td>
+                    <td className="text-gradient-purple">{o.durationMinutes !== undefined ? `${Math.floor(o.durationMinutes / 60)}h ${o.durationMinutes % 60}m` : '-'}</td>
                   </tr>
                 ))}
               </tbody>

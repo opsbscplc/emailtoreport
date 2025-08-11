@@ -10,6 +10,7 @@ export default function SyncPage() {
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
   const [syncResult, setSyncResult] = useState<any>(null);
   const [progress, setProgress] = useState(0);
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -18,8 +19,15 @@ export default function SyncPage() {
   }, [status, router]);
 
   const handleSync = async () => {
+    // Check if user is authenticated before proceeding
+    if (!session) {
+      router.push('/api/auth/signin?callbackUrl=/sync');
+      return;
+    }
+
     setSyncStatus('syncing');
     setProgress(0);
+    setErrorMessage(''); // Clear previous error
     
     // Simulate progress
     const progressInterval = setInterval(() => {
@@ -38,6 +46,7 @@ export default function SyncPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Include session cookies
       });
 
       clearInterval(progressInterval);
@@ -48,11 +57,30 @@ export default function SyncPage() {
         setSyncResult(result);
         setSyncStatus('success');
       } else {
-        throw new Error('Sync failed');
+        // Get more detailed error information
+        let errorDetails = '';
+        try {
+          const errorJson = await response.json();
+          errorDetails = errorJson.details || errorJson.error || 'Unknown error';
+        } catch {
+          errorDetails = await response.text() || 'Unknown error';
+        }
+        
+        console.error('Sync failed with status:', response.status, errorDetails);
+        
+        if (response.status === 401) {
+          // Redirect to sign in if unauthorized
+          router.push('/api/auth/signin?callbackUrl=/sync');
+          return;
+        }
+        
+        throw new Error(`Sync failed (${response.status}): ${errorDetails}`);
       }
     } catch (error) {
       clearInterval(progressInterval);
       setSyncStatus('error');
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error occurred';
+      setErrorMessage(errorMsg);
       console.error('Sync error:', error);
     }
   };
@@ -194,9 +222,16 @@ export default function SyncPage() {
                 
                 <div className="bg-red-50 rounded-2xl p-6 border border-red-200">
                   <h3 className="text-gradient-red font-semibold mb-2">Sync Failed</h3>
-                  <p className="text-gradient-orange text-sm">
+                  <p className="text-gradient-orange text-sm mb-3">
                     Unable to synchronize with Gmail. Please check your connection and try again.
                   </p>
+                  {errorMessage && (
+                    <div className="bg-red-100 rounded-lg p-3 border border-red-300">
+                      <p className="text-xs text-red-700 font-mono">
+                        Error: {errorMessage}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex gap-3">

@@ -108,7 +108,7 @@ export default function MonthlyPage() {
       
       // Prepare table data using filtered outages
       const tableData = filteredOutages.map((outage: any, index: number) => {
-        const runtime = outage.durationMinutes ? `${Math.floor(outage.durationMinutes / 60)}h ${outage.durationMinutes % 60}m` : '-';
+        const runtime = outage.durationMinutes !== undefined ? `${Math.floor(outage.durationMinutes / 60)}h ${outage.durationMinutes % 60}m` : '-';
         const date = format(toZonedTime(new Date(outage.start), 'Asia/Dhaka'), 'dd/MM/yy'); // Changed to DD/MM/YY format
         
         return [
@@ -409,7 +409,7 @@ export default function MonthlyPage() {
                   <td className="py-3 px-2 text-gradient-green">{o.end ? format(toZonedTime(new Date(o.end), 'Asia/Dhaka'), 'HH:mm') : 'Ongoing'}</td>
                   <td className="py-3 px-2">
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-gradient-purple">
-                      {o.durationMinutes ? `${Math.floor(o.durationMinutes / 60)}h ${o.durationMinutes % 60}m` : '-'}
+                      {o.durationMinutes !== undefined ? `${Math.floor(o.durationMinutes / 60)}h ${o.durationMinutes % 60}m` : '-'}
                     </span>
                   </td>
                 </tr>

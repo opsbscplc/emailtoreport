@@ -74,6 +74,13 @@ html {
   -webkit-text-fill-color: transparent;
 }
 
+.text-gradient-pink {
+  background: linear-gradient(135deg, #ec4899 0%, #db2777 50%, #f472b6 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
 .text-gradient-rainbow {
   background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 25%, #45b7d1 50%, #96ceb4 75%, #ffeaa7 100%);
   -webkit-background-clip: text;
